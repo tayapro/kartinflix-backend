@@ -1,0 +1,3 @@
+ADDRESS=http://localhost:3002
+ID=630274593b60757f142e2c34
+curl -isS -X DELETE $ADDRESS/picture/$ID
