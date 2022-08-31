@@ -1,3 +1,3 @@
 ADDRESS=http://localhost:3002
-ID=6307ba28f0d4d1791c28ea13
-curl -isS $ADDRESS/picture/$ID
+ID=630bbb5b3115a4abf9b4ed80
+curl -isS -H "Authorization: Bearer $TOKEN" $ADDRESS/picture/$ID

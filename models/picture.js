@@ -1,6 +1,10 @@
 mongoose = require('mongoose')
 
 const schema = new mongoose.Schema({
+    author: {
+        type: String,
+        required: true,
+    },
     pictb64: {
         type: String,
         require: true,
@@ -8,6 +12,10 @@ const schema = new mongoose.Schema({
     imgtype: {
         type: String,
         require: true,
+    },
+    uploadedAt: {
+        type: Number,
+        required: true,
     },
 })
 

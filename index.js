@@ -2,6 +2,9 @@ express = require('express')
 morgan = require('morgan')
 mongoose = require('mongoose')
 aws = require('aws-sdk')
+axios = require('axios')
+jwt = require('jsonwebtoken')
+jwkToPem = require('jwk-to-pem')
 require('dotenv').config() // add values from .env file
 Picture = require('./models/picture')
 
@@ -11,13 +14,18 @@ const port = 3002
 aws.config.update({ region: process.env.REGION })
 
 //in order to parse POST JSON
-app.use(express.json({ limit: '50mb' }))
+app.use(express.json({ limit: '5mb' }))
 
 //to log requests
 app.use(morgan('combined'))
 
 mongoose.connect(process.env.MONGO_URL).catch(function (err) {
     console.log(err)
+})
+
+let myIDkeys = null
+axios.get(process.env.MYID_URL).then((resp) => {
+    myIDkeys = resp.data
 })
 
 app.listen(port, function () {
@@ -31,11 +39,17 @@ app.get('/ping', async function (req, res) {
 // Create picture
 app.post('/picture', async function (req, res) {
     try {
+        const decoded_token = verifyToken(req.headers)
+        if (!decoded_token) return res.status(401).send()
+
         const picture = new Picture({
+            author: decoded_token.username,
             pictb64: req.body.pict,
             imgtype: req.body.imgtype,
+            uploadedAt: Date.now(),
         })
         const { id } = await picture.save()
+        console.log('author>>>>>>', picture.author)
         console.log("picture's id>>>>>>>>>", id)
 
         const s3params = {
@@ -58,6 +72,18 @@ app.post('/picture', async function (req, res) {
 // Read picture
 app.get('/picture/:id', async function (req, res) {
     try {
+        const decoded_token = verifyToken(req.headers)
+        if (!decoded_token) return res.status(401).send()
+
+        const username = decoded_token.username
+        console.log('username >>>>>>>>> ', username)
+        const { author } = await Picture.findById(req.params.id)
+        console.log('author >>>>>>>>>> ', author)
+
+        if (author !== username) {
+            return res.status(403).send()
+        }
+
         s3 = new aws.S3({ apiVersion: '2022-08-23' })
         const s3params = {
             Bucket: process.env.BUCKET_NAME,
@@ -66,10 +92,10 @@ app.get('/picture/:id', async function (req, res) {
         const { Body } = await s3.getObject(s3params).promise()
         const pictb64 = Body.toString()
         const pic = Buffer.from(pictb64, 'base64')
-        console.log('pic>>>>>>>', pic)
+        // console.log('pic>>>>>>>', pic)
 
         const { imgtype } = await Picture.findById(req.params.id)
-        console.log('type of picture>>>>>>>>>>>>', imgtype)
+        // console.log('type of picture>>>>>>>>>>>>', imgtype)
         res.type(imgtype)
         res.status(200).send(pic)
     } catch (e) {
@@ -82,12 +108,26 @@ app.get('/picture/:id', async function (req, res) {
 // Delete picture
 app.delete('/picture/:id', async function (req, res) {
     try {
+        const decoded_token = verifyToken(req.headers)
+        if (!decoded_token) return res.status(401).send()
+
+        const username = decoded_token.username
+        console.log('username >>>>>>>>> ', username)
+        const { author } = await Picture.findById(req.params.id)
+        console.log('author >>>>>>>>>> ', author)
+
+        if (author !== username) {
+            return res.status(403).send()
+        }
+
         const s3params = {
             Bucket: process.env.BUCKET_NAME,
             Key: req.params.id,
         }
         s3 = new aws.S3({ apiVersion: '2022-08-23' })
-        s3.deleteObject(s3params).promise()
+        s3.deleteObject(s3params).promise() //delete in S3 bucket
+
+        await Picture.deleteOne({ _id: req.params.id }) //delete in DB
 
         res.status(200).send()
     } catch (e) {
@@ -95,3 +135,26 @@ app.delete('/picture/:id', async function (req, res) {
         res.status(400).send()
     }
 })
+
+function verifyToken(headers) {
+    try {
+        console.log('headers>>>>> ', headers)
+        const auth = headers['authorization']
+        if (!auth) {
+            throw new Error('No auth header')
+        }
+        const token = auth.split(' ')[1]
+        console.log('token>>>>>>>>>', token)
+        console.log('myIDkeys>>>>>> ', myIDkeys)
+        const { header } = jwt.decode(token, { complete: true })
+        console.log('key ID = ', header.kid)
+        const decoded_token = jwt.verify(token, jwkToPem(myIDkeys.keys[0]), {
+            algirithms: ['RS256'],
+        })
+        console.log(decoded_token)
+        return decoded_token
+    } catch (e) {
+        console.log('ERROR::', e)
+        return undefined
+    }
+}
