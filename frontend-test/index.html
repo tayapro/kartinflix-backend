@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>kartinflix</title>
+    </head>
+    <body>
+        <label for="picID">Picture ID:</label><br>
+        <input type="text" id="picID" name="picID" value="63138328af9500527634a2cb"><br>
+        <label for="token">TOKEN:</label><br>
+        <input type="text" id="token" name="token" value="eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ilhvb29sYkQwQlBHQUJqSHpTRFJmUTRZQmc4SDg3endUSlZtbVA4STgxT0EifQ.eyJ1c2VybmFtZSI6InN0aXBheGEiLCJ1c2VyX2lkIjoiNjJiMzNjMTIzODdhNDFhMDgwZjI5ZWE0IiwidG9rZW5fdXNlIjoiYWNjZXNzIiwiaWF0IjoxNjYyNDkzNjcwLCJleHAiOjE2NjI0OTcyNzB9.izSLROHy94C4Ogtb5r-EetQxYnzjQ5IOodkw-TKJFiqlgKdqWT9SPFvBcLasGMgMCPW8AUntO7lSJFh-ckVFbnSyrv3_jcZ78pY6SnbMAJ4ScHu5VOFirlYW_YAonuDQzSyvbc3xdHE51Wtesbqui3voVhvJ-ZCBZGCRbYOD0WGlxeYgTY7GJH2rV0gHbNrctslr2ChtBQpUYsnLDFNs1bm4tCQMq_UuxhFTvCtj8mSh7tHYcsdNcAcLw5KyPv4c9Bs9J0jLgo5aYPY-PkhoLS4X1WrwWsrEcYeFTD98bpUqiRs94bFE1cRbfbDNostn_1Cai6qEwGSwPZ_hFlH_Zw"><br><br>
+        <button onclick="makeURL();">PICTURE</button>
+
+        <img id="ItemPreview" src="">
+    </body>
+</html>
+
+<script>
+    async function makeURL() {
+        let picID = document.getElementById('picID').value
+        let token = document.getElementById('token').value
+
+        let url0 = "http://localhost:3002/picture/"
+        let url1 = new URL(picID, url0)
+
+        let headers = {
+            'Authorization': `Bearer ${token}`
+        }
+        
+        const res = await fetch (url1, {
+            method: 'GET',
+            headers: headers
+        })
+        
+        const picture_blob = await res.blob() 
+
+        const reader = new FileReader()
+        reader.readAsDataURL(picture_blob)
+        reader.onloadend = function () {
+            const base64string = reader.result
+            console.log('base64 string >>>>>>>>>', base64string)
+            const picture = base64string.split(',')[1]
+            console.log("picture>>>>>>>>>>", picture)
+            document.getElementById("ItemPreview").src = "data:image/png;base64," + picture
+        }
+    }
+</script>

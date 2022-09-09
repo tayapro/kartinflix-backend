@@ -1,6 +1,6 @@
 USERNAME=$1
 PASSWORD=$2
-MYHOST=54.78.47.118
+MYHOST=http://localhost:3001
 
 if [ -z $USERNAME ] || [ -z $PASSWORD ]; then
   echo "Usage: $(basename $0) <username> <password>"
@@ -9,7 +9,7 @@ fi
 
 curl -Sis -X POST \
   -H "Content-Type: application/json" \
-  http://$MYHOST:3001/api/register \
+  $MYHOST/api/register \
   -d "{\"username\": \"$USERNAME\", \"password\": \"$PASSWORD\"}"
 
 echo

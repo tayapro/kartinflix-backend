@@ -5,6 +5,7 @@ aws = require('aws-sdk')
 axios = require('axios')
 jwt = require('jsonwebtoken')
 jwkToPem = require('jwk-to-pem')
+cors = require('cors')
 require('dotenv').config() // add values from .env file
 Picture = require('./models/picture')
 
@@ -15,6 +16,15 @@ aws.config.update({ region: process.env.REGION })
 
 //in order to parse POST JSON
 app.use(express.json({ limit: '5mb' }))
+
+app.use(
+    cors({
+        origin: process.env.CORS_ALLOWED_ORIGINS
+            ? process.env.CORS_ALLOWED_ORIGINS.split(' ')
+            : '*',
+        credentials: true,
+    })
+)
 
 //to log requests
 app.use(morgan('combined'))
@@ -76,9 +86,9 @@ app.get('/picture/:id', async function (req, res) {
         if (!decoded_token) return res.status(401).send()
 
         const username = decoded_token.username
-        console.log('username >>>>>>>>> ', username)
+        //console.log('username >>>>>>>>> ', username)
         const { author } = await Picture.findById(req.params.id)
-        console.log('author >>>>>>>>>> ', author)
+        //console.log('author >>>>>>>>>> ', author)
 
         if (author !== username) {
             return res.status(403).send()
@@ -144,14 +154,14 @@ function verifyToken(headers) {
             throw new Error('No auth header')
         }
         const token = auth.split(' ')[1]
-        console.log('token>>>>>>>>>', token)
-        console.log('myIDkeys>>>>>> ', myIDkeys)
+        //console.log('token>>>>>>>>>', token)
+        //console.log('myIDkeys>>>>>> ', myIDkeys)
         const { header } = jwt.decode(token, { complete: true })
-        console.log('key ID = ', header.kid)
+        //console.log('key ID = ', header.kid)
         const decoded_token = jwt.verify(token, jwkToPem(myIDkeys.keys[0]), {
             algirithms: ['RS256'],
         })
-        console.log(decoded_token)
+        //console.log(decoded_token)
         return decoded_token
     } catch (e) {
         console.log('ERROR::', e)

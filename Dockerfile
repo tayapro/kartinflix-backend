@@ -9,6 +9,7 @@ COPY index.js .
 COPY package-lock.json .
 COPY package.json .
 COPY models ./models 
+COPY frontend-test ./frontend-test
 
 # run npm command, which looks for package-lock.json and install all deps from where
 # as result directory node_modules will be created
