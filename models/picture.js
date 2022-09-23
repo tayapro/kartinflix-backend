@@ -5,10 +5,6 @@ const schema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    pictb64: {
-        type: String,
-        require: true,
-    },
     imgtype: {
         type: String,
         require: true,

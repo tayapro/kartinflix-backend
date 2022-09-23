@@ -2,6 +2,7 @@ USERNAME=$1
 PASSWORD=$2
 MYHOST1=https://api.tayadev.com
 MYHOST=http://localhost:3001
+MYHOST1=http://34.242.85.230:3001
 MYHOST1=http://homyak-alb-385306616.eu-west-1.elb.amazonaws.com
 
 if [ -z $USERNAME ] || [ -z $PASSWORD ]; then

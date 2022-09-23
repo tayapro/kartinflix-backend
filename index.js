@@ -54,7 +54,6 @@ app.post('/picture', async function (req, res) {
 
         const picture = new Picture({
             author: decoded_token.username,
-            pictb64: req.body.pict,
             imgtype: req.body.imgtype,
             uploadedAt: Date.now(),
         })
@@ -143,6 +142,30 @@ app.delete('/picture/:id', async function (req, res) {
     } catch (e) {
         console.log(e)
         res.status(400).send()
+    }
+})
+
+//list of pictures IDs
+app.get('/pictures', async function (req, res) {
+    try {
+        const decoded_token = verifyToken(req.headers)
+        if (!decoded_token) return res.status(401).send()
+
+        const username = decoded_token.username
+
+        const all_pictures = await Picture.find({ author: username })
+        // console.log('pictures lenght = ', all_pictures.length)
+        let result = []
+        for (let i = 0; i < all_pictures.length; i++) {
+            result.push(all_pictures[i].id)
+            console.log('pictureID = ', all_pictures[i].id)
+        }
+
+        res.status(200).json(result)
+    } catch (e) {
+        //TODO: расширить класс ошибки и добавить статус
+        console.error(e)
+        res.status(404).send()
     }
 })
 

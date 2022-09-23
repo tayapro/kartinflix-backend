@@ -1,7 +1,7 @@
 # Use an node:14 image from DockerHub as a parent image
 FROM node:16.15
 
-# Set the working directory to /homyaksocial-backend
+# Set the working directory
 WORKDIR /kartinflix-backend
 
 # Copy required files to the image
