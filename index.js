@@ -49,6 +49,11 @@ app.get('/ping', async function (req, res) {
 // Create picture
 app.post('/picture', async function (req, res) {
     try {
+        //not allow to upload 0 bytes picture
+        if (req.body.pict === '') {
+            throw new Error('Empty picture, not allow for uploading')
+        }
+
         const decoded_token = verifyToken(req.headers)
         if (!decoded_token) return res.status(401).send()
 
